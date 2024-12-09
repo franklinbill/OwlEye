@@ -1,0 +1,52 @@
+Dockerfileversion: "1"
+rules:
+  - base: master
+    upstream: owner:master
+    mergeMethod: hardreset
+  - base: docs
+    upstream: owner:docs
+    mergeMethod: hardresetversion: "1"
+rules: # Array of rules
+  - base: master # Required. Target branch
+    upstream: wei:master # Required. Must be in the same fork network.
+    mergeMethod: hardreset # Optional, one of [none, merge, squash, rebase, hardreset], Default: none.
+    mergeUnstable: false # Optional, merge pull request even when the mergeable_state is not clean. Default: false
+  - base: dev
+    upstream: master # Required. Can be a branch in the same forked repo.
+    assignees: # Optional
+      - wei
+    reviewers: # Optional
+      - wei
+    conflictReviewers: # Optional, on merge conflict assign a reviewer
+      - wei
+label: ":arrow_heading_down: pull" # Optional
+conflictLabel: "merge-conflict" # Optional, on merge conflict assign a custom label, Default: merge-conflictname: Django CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run Tests
+      run: |
+        python manage.py test
